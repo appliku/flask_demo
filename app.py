@@ -19,6 +19,9 @@ class Message(Base):
     email = Column(String, index=True)
     message = Column(String, index=True)
 
+    def __as_dict__(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
 
 # Create the table in the database
 Base.metadata.create_all(bind=engine)
