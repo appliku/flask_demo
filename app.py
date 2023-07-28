@@ -20,7 +20,12 @@ class Message(Base):
     message = Column(String, index=True)
 
     def __as_dict__(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        return {
+            "name": self.name,
+            "email": self.email,
+            "message": self.message,
+            "id": self.id
+        }
 
 
 # Create the table in the database
