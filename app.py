@@ -19,14 +19,6 @@ class Message(Base):
     email = Column(String, index=True)
     message = Column(String, index=True)
 
-    def __as_dict__(self):
-        return {
-            "name": self.name,
-            "email": self.email,
-            "message": self.message,
-            "id": self.id
-        }
-
 
 # Create the table in the database
 Base.metadata.create_all(bind=engine)
@@ -47,7 +39,12 @@ def add_message():
     db.commit()
     db.refresh(new_message)
     db.close()
-    return dict(new_message)
+    return {
+        "name": new_message.name,
+        "email": new_message.email,
+        "message": new_message.message,
+        "id": new_message.id
+    }
 
 
 if __name__ == '__main__':
