@@ -39,7 +39,7 @@ def add_message():
     db.commit()
     db.refresh(new_message)
     db.close()
-    return new_message
+    return jsonify(new_message)
 
 
 if __name__ == '__main__':
