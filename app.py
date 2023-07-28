@@ -1,31 +1,27 @@
 import os
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
-import psycopg2
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
-
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-
-    def __init__(self, name, email, message):
-        self.name = name
-        self.email = email
-        self.message = message
+DATABASE_URL = os.environ['DATABASE_URL']
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
+class Message(Base):
+    __tablename__ = "messages"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    email = Column(String, index=True)
+    message = Column(String, index=True)
+
+
+# Create the table in the database
+Base.metadata.create_all(bind=engine)
 
 
 @app.route('/messages', methods=['POST'])
@@ -38,16 +34,12 @@ def add_message():
 
     new_message = Message(name=name, email=email, message=message)
 
-    try:
-        db.session.add(new_message)
-        db.session.commit()
-        return jsonify({"message": "Message added successfully"}), 201
-    except Exception as e:
-        _ = e
-        db.session.rollback()
-        return jsonify({"message": "Failed to add message"}), 500
-    finally:
-        db.session.close()
+    db = SessionLocal()
+    db.add(new_message)
+    db.commit()
+    db.refresh(new_message)
+    db.close()
+    return new_message
 
 
 if __name__ == '__main__':
